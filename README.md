@@ -37,15 +37,15 @@ It integrates **MongoDB for user data**, **Elasticsearch for audit logs**, and s
 ---
 
 ## 🛠️ Technologies Used
-| Technology              | Purpose                                      |
-|-------------------------|----------------------------------------------|
-| **Java 21**            | Core backend development                     |
-| **Spring Boot 3.4.3**  | REST API & Modular Architecture              |
-| **Spring Modulith**    | Event-driven service structure               |
+| Technology             | Purpose                                      |
+|------------------------|----------------------------------------------|
+| **Java 21**           | Core backend development                     |
+| **Spring Boot 3.4.3** | REST API & Modular Architecture              |
+| **Spring Modulith**   | Event-driven service structure               |
 | **MongoDB**           | Primary database (User & Audit Logs)         |
-| **Elasticsearch**      | Storing & retrieving audit logs              |
-| **Gradle Kotlin DSL**  | Dependency Management                        |
-| **Docker Compose**     | Multi-container deployment                   |
+| **Elasticsearch**     | Storing & retrieving audit logs              |
+| **Gradle Kotlin DSL** | Dependency Management                        |
+| **Docker Compose**    | Multi-container deployment                   |
 | **Keycloak**          | Planned for Authentication                   |
 
 ---
@@ -88,7 +88,45 @@ Captures **user actions** and stores them in **MongoDB & Elasticsearch**.
 
 ## 🔧 Setup and Installation
 
-### **1️⃣ Clone the Repository**
+### 1️⃣ Clone the Repository
 ```sh
 git clone https://github.com/YOUR-USERNAME/defensy-backend.git
 cd defensy-backend
+```
+
+### 2️⃣ Configure Environment Variables
+
+Ensure `.env` exists in the root directory with:
+
+```sh
+MONGO_INITDB_ROOT_USERNAME=root
+MONGO_INITDB_ROOT_PASSWORD=0000
+ELASTIC_PASSWORD=0000
+KEYCLOAK_ADMIN=admin
+KEYCLOAK_ADMIN_PASSWORD=admin
+```
+
+### 3️⃣ Start Services with Docker
+
+```sh
+docker compose up -d
+```
+
+### 4️⃣ Run the Application
+
+```sh
+./gradlew bootRun
+```
+
+### 5️⃣ Verify Running Services
+
+📌 **MongoDB**: `mongodb://localhost:27017/defensy`  
+📌 **Elasticsearch**: `http://localhost:9200/audit_logs`
+
+---
+
+## 📌 Future Enhancements
+🚀 **CSV Ingestion** (Process security data from Microsoft Sentinel)  
+🚀 **Instant Messaging** (SOC analyst communication feature)  
+🚀 **Keycloak Authentication** (User federation & access control)  
+🚀 **Security Hardening** (Implement CSRF protection & JWT-based security)  
