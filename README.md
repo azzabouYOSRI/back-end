@@ -99,11 +99,26 @@ cd defensy-backend
 Ensure `.env` exists in the root directory with:
 
 ```sh
+# MongoDB Credentials
 MONGO_INITDB_ROOT_USERNAME=root
 MONGO_INITDB_ROOT_PASSWORD=0000
+
+# Elasticsearch Credentials
 ELASTIC_PASSWORD=0000
+
+# PostgreSQL Credentials
+POSTGRES_USER=keycloak
+POSTGRES_PASSWORD=password
+POSTGRES_DB=keycloak
+
+# Keycloak Credentials
 KEYCLOAK_ADMIN=admin
-KEYCLOAK_ADMIN_PASSWORD=admin
+KEYCLOAK_ADMIN_PASSWORD=password
+
+# Database Credentials for Keycloak
+KC_DB_USERNAME=keycloak
+KC_DB_PASSWORD=password
+
 ```
 
 ### 3️⃣ Start Services with Docker
