@@ -2,16 +2,16 @@ package com.yosri.defensy.backend.modules.audit.domain;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import java.time.LocalDateTime;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.Instant;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-@org.springframework.data.mongodb.core.mapping.Document(collection = "audit_logs")
-@Document(indexName = "audit_logs")
+@Document(collection = "audit_logs")
 public class AuditLogMongo {
 
     @Id
@@ -21,5 +21,5 @@ public class AuditLogMongo {
     private String entityId;
     private String entityType;
     private String message;
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 }

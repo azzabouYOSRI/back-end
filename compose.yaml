@@ -1,18 +1,92 @@
+version: "3.8"
+
+networks:
+  defensym-network:
+    driver: bridge
+
 services:
-  elasticsearch:
-    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.17.10'
+  ### 🟢 PostgreSQL for Keycloak ###
+  postgres:
+    image: postgres:latest
+    container_name: keycloak_postgres
+    restart: always
     environment:
-      - 'ELASTIC_PASSWORD=secret'
-      - 'discovery.type=single-node'
-      - 'xpack.security.enabled=false'
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-keycloak}
     ports:
-      - '9200'
-      - '9300'
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-keycloak-db.sql:/docker-entrypoint-initdb.d/init-keycloak-db.sql
+    networks:
+      - defensym-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-keycloak}"]
+      interval: 10s
+      retries: 5
+      start_period: 60s
+
+  ### 🔐 Keycloak ###
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.2
+    container_name: keycloak
+    restart: always
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-password}
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres/${POSTGRES_DB:-keycloak}
+      - KC_DB_USERNAME=${POSTGRES_USER:-keycloak}
+      - KC_DB_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - KC_HOSTNAME=localhost
+      - KC_HTTP_PORT=8080
+    command: ["start-dev"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - defensym-network
+
+  ### 🟢 MongoDB ###
   mongodb:
-    image: 'mongo:latest'
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
     environment:
-      - 'MONGO_INITDB_DATABASE=mydatabase'
-      - 'MONGO_INITDB_ROOT_PASSWORD=secret'
-      - 'MONGO_INITDB_ROOT_USERNAME=root'
+      - MONGO_INITDB_DATABASE=defensym
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD:-0000}
     ports:
-      - '27017'
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - defensym-network
+
+  ### 🔍 Elasticsearch ###
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-0000}
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - defensym-network
+
+volumes:
+  postgres-data:
+    driver: local
+  mongodb-data:
+    driver: local
+  elasticsearch-data:
+    driver: local

@@ -1,53 +1,64 @@
 package com.yosri.defensy.backend.modules.audit.listeners;
 
-import com.yosri.defensy.backend.modules.audit.domain.AuditLogElastic;
-import com.yosri.defensy.backend.modules.audit.repository.AuditLogElasticRepository;
+import com.yosri.defensy.backend.modules.audit.domain.AuditLogMongo;
+import com.yosri.defensy.backend.modules.audit.repository.AuditLogMongoRepository;
 import com.yosri.defensy.backend.modules.user.events.UserCreatedEvent;
+import com.yosri.defensy.backend.modules.user.events.UserRetrievedAllEvent;
+import com.yosri.defensy.backend.modules.user.events.UserRetrievedEvent;
 import com.yosri.defensy.backend.modules.user.events.UserUpdatedEvent;
-import com.yosri.defensy.backend.modules.user.events.UserDeletedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
-@Service
-public class AuditLogElasticListener {
-    private final AuditLogElasticRepository auditLogRepository;
+@Component
+public class AuditLogMongoListener {
 
-    public AuditLogElasticListener(AuditLogElasticRepository auditLogRepository) {
-        this.auditLogRepository = auditLogRepository;
+    private final AuditLogMongoRepository auditLogMongoRepository;
+
+    public AuditLogMongoListener(AuditLogMongoRepository auditLogMongoRepository) {
+        this.auditLogMongoRepository = auditLogMongoRepository;
     }
 
     @EventListener
     public void handleUserCreated(UserCreatedEvent event) {
-        AuditLogElastic log = new AuditLogElastic();
+        AuditLogMongo log = new AuditLogMongo();
         log.setEventType("USER_CREATED");
         log.setEntityId(event.getUserId());
         log.setEntityType("User");
-        log.setMessage("User created: " + event.getUsername());
+        log.setMessage(String.format("User created: %s", event.getUsername()));
         log.setTimestamp(Instant.now());
-        auditLogRepository.save(log);
+        auditLogMongoRepository.save(log);
     }
 
     @EventListener
     public void handleUserUpdated(UserUpdatedEvent event) {
-        AuditLogElastic log = new AuditLogElastic();
+        AuditLogMongo log = new AuditLogMongo();
         log.setEventType("USER_UPDATED");
         log.setEntityId(event.getUserId());
         log.setEntityType("User");
-        log.setMessage("User updated: " + event.getUsername());
+        log.setMessage(String.format("User updated: %s", event.getUsername()));
         log.setTimestamp(Instant.now());
-        auditLogRepository.save(log);
+        auditLogMongoRepository.save(log);
+    }
+        @EventListener
+    public void handleUserRetrieved(UserRetrievedEvent event) {
+        AuditLogMongo log = new AuditLogMongo();
+        log.setEventType("USER_RETRIEVED");
+        log.setEntityId(event.getUserId());
+        log.setEntityType("User");
+        log.setMessage("User data retrieved from MongoDB");
+        log.setTimestamp(Instant.now());
+        auditLogMongoRepository.save(log);
     }
 
     @EventListener
-    public void handleUserDeleted(UserDeletedEvent event) {
-        AuditLogElastic log = new AuditLogElastic();
-        log.setEventType("USER_DELETED");
-        log.setEntityId(event.getUserId());
+    public void handleUserRetrievedAll(UserRetrievedAllEvent event) {
+        AuditLogMongo log = new AuditLogMongo();
+        log.setEventType("ALL_USERS_RETRIEVED");
         log.setEntityType("User");
-        log.setMessage("User deleted: " + event.getUserId());
+        log.setMessage("All users retrieved from MongoDB");
         log.setTimestamp(Instant.now());
-        auditLogRepository.save(log);
+        auditLogMongoRepository.save(log);
     }
 }

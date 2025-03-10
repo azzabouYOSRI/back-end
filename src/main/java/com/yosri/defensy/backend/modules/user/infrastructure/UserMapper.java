@@ -4,6 +4,11 @@ import com.yosri.defensy.backend.modules.user.domain.User;
 import com.yosri.defensy.backend.modules.user.domain.UserRole;
 
 public class UserMapper {
+
+    private UserMapper() {
+    throw new UnsupportedOperationException("Utility class");
+}
+
     public static UserDto toDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
