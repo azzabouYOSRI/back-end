@@ -7,17 +7,21 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @Document(indexName = "audit_logs")
 public class AuditLogElastic {
 
     @Id
     private String id;
+
+    @Field(type = FieldType.Date)
+    private Instant timestamp;
 
     @Field(type = FieldType.Keyword)
     private String eventType;
@@ -31,6 +35,6 @@ public class AuditLogElastic {
     @Field(type = FieldType.Text)
     private String message;
 
-    @Field(type = FieldType.Date)
-    private Instant timestamp;
+    @Field(type = FieldType.Object)
+    private Map<String, Object> additionalInfo;
 }

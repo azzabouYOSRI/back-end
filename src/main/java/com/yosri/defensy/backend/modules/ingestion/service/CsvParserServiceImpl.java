@@ -92,27 +92,32 @@ public class CsvParserServiceImpl implements CsvParserService {
         }
     }
 
-    List<Map<String, String>> parse(Path filePath) throws IOException {
-        List<Map<String, String>> extractedData = new ArrayList<>();
+@Override
+public List<Map<String, String>> parse(Path filePath) throws IOException {
+    List<Map<String, String>> extractedData = new ArrayList<>();
 
-        try (Reader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8);
-             CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withHeader().withSkipHeaderRecord(true))) {
+    try (Reader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8);
+         CSVParser csvParser = CSVFormat.DEFAULT
+                 .builder()
+                 .setHeader()
+                 .setSkipHeaderRecord(true)
+                 .build()
+                 .parse(reader)) {
 
-            if (csvParser.getHeaderMap().isEmpty()) {
-                log.warn("⚠️ CSV has no headers: {}", filePath);
-                return Collections.emptyList();
-            }
-
-            for (CSVRecord record : csvParser) {
-                extractedData.add(new LinkedHashMap<>(record.toMap()));
-            }
-
-            log.info("✅ Extracted {} records from {}", extractedData.size(), filePath);
+        if (csvParser.getHeaderMap().isEmpty()) {
+            log.warn("⚠️ CSV has no headers: {}", filePath);
+            return Collections.emptyList();
         }
 
-        return extractedData;
+        for (CSVRecord csvrecord : csvParser) {
+            extractedData.add(new LinkedHashMap<>(csvrecord.toMap()));
+        }
+
+        log.info("✅ Extracted {} records from {}", extractedData.size(), filePath);
     }
 
+    return extractedData;
+}
     public Path moveFile(Path filePath, Path targetDir) {
         try {
             Files.createDirectories(targetDir);

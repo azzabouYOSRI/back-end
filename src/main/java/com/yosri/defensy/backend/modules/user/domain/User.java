@@ -31,7 +31,7 @@ public class User {
     private String email;
 
     @NotBlank(message = "Password is required")
-    private String password; // Store as a **hashed value**
+    private String password; //
 
     private UserRole role; // ENUM for user roles
 

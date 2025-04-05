@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationEvent;
 @Getter
 public class CorrelationCompletedEvent extends ApplicationEvent {
 
-    private final CorrelationResult correlationResult;
+    private  CorrelationResult correlationResult;
 
     public CorrelationCompletedEvent(Object source, CorrelationResult correlationResult) {
         super(source);

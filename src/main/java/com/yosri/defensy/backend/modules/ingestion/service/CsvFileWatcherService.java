@@ -1,6 +1,5 @@
 package com.yosri.defensy.backend.modules.ingestion.service;
 
-import com.yosri.defensy.backend.modules.ingestion.event.CsvFileDetectedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -19,11 +18,13 @@ public class CsvFileWatcherService {
     private static final String PROCESSED_DIR = "csv-processed";
     private static final String FAILED_DIR = "csv-failed";
 
-    private final ApplicationEventPublisher eventPublisher;
+    private final CsvParserService csvParserService;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final ApplicationEventPublisher eventPublisher;
 
-    public CsvFileWatcherService(ApplicationEventPublisher eventPublisher) {
+    public CsvFileWatcherService(ApplicationEventPublisher eventPublisher, CsvParserService csvParserService) {
         this.eventPublisher = eventPublisher;
+        this.csvParserService = csvParserService;
         createDirectories(); // Ensure required directories exist
         startWatcher(); // Start watching for new files
     }
@@ -44,8 +45,7 @@ public class CsvFileWatcherService {
                 for (WatchEvent<?> event : key.pollEvents()) {
                     Path filePath = inboxPath.resolve((Path) event.context());
                     if (filePath.toString().endsWith(".csv")) {
-                        log.info("🆕 New CSV file detected: {}", filePath);
-                        processFile(filePath);
+                        onFileCreated(filePath);
                     }
                 }
                 key.reset();
@@ -56,35 +56,33 @@ public class CsvFileWatcherService {
         }
     }
 
-    private void processFile(Path filePath) {
+    private void onFileCreated(Path filePath) {
+        log.info("🆕 New CSV file detected: {}", filePath);
+        Path processingPath = moveToProcessingFolder(filePath);
+
+        // Trigger CSV parsing explicitly to fix the broken event chain
+        if (processingPath != null) {
+    csvParserService.parseCsvFile(processingPath);
+        }
+    }
+
+    private Path moveToProcessingFolder(Path filePath) {
         Path processingPath = Paths.get(PROCESSING_DIR, filePath.getFileName().toString());
         try {
             Files.move(filePath, processingPath, StandardCopyOption.REPLACE_EXISTING);
             log.info("📂 Moved to processing folder: {}", processingPath);
-
-            // Publish an event for processing
-            eventPublisher.publishEvent(new CsvFileDetectedEvent(this, processingPath.toString()));
-
+            return processingPath;
         } catch (IOException e) {
-            log.error("❌ Error moving file: {}", e.getMessage());
+            log.error("❌ Error moving file to processing: {}", e.getMessage());
             moveToFailed(filePath);
-        }
-    }
-
-    public void moveToProcessed(Path filePath) {
-        try {
-            Path processedPath = Paths.get(PROCESSED_DIR, filePath.getFileName().toString());
-            Files.move(filePath, processedPath, StandardCopyOption.REPLACE_EXISTING);
-            log.info("✅ Moved file to processed folder: {}", processedPath);
-        } catch (IOException e) {
-            log.error("❌ Error moving file to processed folder: {}", e.getMessage());
-            moveToFailed(filePath);
+            return null;
         }
     }
 
     private void moveToFailed(Path filePath) {
         try {
             Path failedPath = Paths.get(FAILED_DIR, filePath.getFileName().toString());
+            Files.createDirectories(Paths.get(FAILED_DIR));
             Files.move(filePath, failedPath, StandardCopyOption.REPLACE_EXISTING);
             log.error("🚨 Moved file to failed folder: {}", failedPath);
         } catch (IOException ex) {

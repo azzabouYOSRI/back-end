@@ -1,0 +1,36 @@
+Since the tests for `DashboardAlertControllerTest.java` are now passing, you may need to apply similar fixes to other controller tests in your project that might have the same issues. Here are the key patterns to apply:
+
+1. **Proper Page serialization**:
+   ```java
+   // Instead of Collections.emptyList() or List.of()
+   List<YourDTO> items = new ArrayList<>();
+   PageImpl<YourDTO> page = new PageImpl<>(
+       items,
+       PageRequest.of(0, 10),
+       items.size()
+   );
+   ```
+
+2. **Configure ObjectMapper with JavaTimeModule**:
+   ```java
+   ObjectMapper objectMapper = new ObjectMapper()
+       .registerModule(new JavaTimeModule());
+
+   MappingJackson2HttpMessageConverter converter =
+       new MappingJackson2HttpMessageConverter(objectMapper);
+   ```
+
+3. **Match status codes with your exception handler**:
+   - `RuntimeException` → 404 (NotFound)
+   - `IllegalArgumentException` → 400 (BadRequest)
+
+4. **Proper MockMvc setup**:
+   ```java
+   mockMvc = MockMvcBuilders
+       .standaloneSetup(yourController)
+       .setControllerAdvice(new YourExceptionHandler())
+       .setMessageConverters(converter)
+       .build();
+   ```
+
+These patterns should resolve similar serialization issues and status code mismatches in other controller tests.

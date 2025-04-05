@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: back-end
+
+  modulith:
+    events:
+      mongodb:
+        transaction-management:
+          enabled: false
+
+  data:
+    mongodb:
+      uri: "mongodb://${MONGO_INITDB_ROOT_USERNAME:root}:${MONGO_INITDB_ROOT_PASSWORD:0000}@localhost:27017/defensym?authSource=admin"
+      auto-index-creation: true
+
+  elasticsearch:
+    uris: http://localhost:9200
+    username: "${ELASTICSEARCH_USERNAME:elastic}"
+    password: "${ELASTICSEARCH_PASSWORD:0000}"
+    connection-timeout: 5s
+    socket-timeout: 3s
+    repositories:
+      enabled: true
+    indices:
+      audit-logs: "audit_logs"
+
+  docker:
+    compose:
+      enabled: true
+
+  main:
+    banner-mode: "console"
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: "http://localhost:8080/realms/Defensy"
+          jwk-set-uri: "http://localhost:8080/realms/Defensy/protocol/openid-connect/certs"
+
+server:
+  port: 9090
+
+logging:
+  level:
+    root: INFO
+    org:
+      springframework: INFO
+      hibernate:
+        SQL: DEBUG
+
+csv:
+  ingestion:
+    directory: "${user.dir}/csv-inbox"
+
+keycloak:
+  auth-server-url: "http://localhost:8080"
+  realm: "Defensy"
+  resource: "defensy-backend"
+  public-client: true
+  credentials:
+    secret: "${KEYCLOAK_CLIENT_SECRET}"
+
+wazuh:
+  api:
+    base-url: "${WAZUH_API_BASE_URL}"
+    username: "${WAZUH_API_USERNAME}"
+    password: "${WAZUH_API_PASSWORD}"
+
+  polling:
+    interval: "${WAZUH_POLLING_INTERVAL:PT5S}"
+
+  ssl:
+    trust-store: "classpath:ssl/${WAZUH_SSL_TRUST_STORE}"
+    trust-store-password: "${WAZUH_SSL_TRUST_STORE_PASSWORD}"
+    trust-store-type: "${WAZUH_SSL_TRUST_STORE_TYPE:JKS}"
+
+  jwt:
+    enabled: true
+    token-endpoint: "/security/user/authenticate?raw=true"
+    cache-ttl: PT15M

@@ -22,6 +22,8 @@ public interface CsvStorageService {
 
     void handleFailedStorage(Path filePath, String errorMessage, List<Map<String, String>> failedData);
 
+    void createDirectories();
+
     /**
      * Moves a CSV file to a specified directory (e.g., processed or failed-storing).
      *
@@ -31,5 +33,4 @@ public interface CsvStorageService {
      */
     Path moveFile(Path filePath, Path targetDir);
 
-    Path moveFailedFile(Path filePath);
 }

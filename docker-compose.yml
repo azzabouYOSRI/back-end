@@ -1,4 +1,6 @@
-version: "3.8"
+
+
+
 
 networks:
   defensym-network:
@@ -18,7 +20,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./init-keycloak-db.sql:/docker-entrypoint-initdb.d/init-keycloak-db.sql
+      - ./docker/scripts/init-keycloak-db.sql:/docker-entrypoint-initdb.d/init-keycloak-db.sql
+
     networks:
       - defensym-network
     healthcheck:
@@ -63,6 +66,7 @@ services:
       - "27017:27017"
     volumes:
       - mongodb-data:/data/db
+      - ./docker//scripts/init-mongodb.js:/docker-entrypoint-initdb.d/init-mongodb.js:ro
     networks:
       - defensym-network
 
@@ -74,15 +78,19 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-0000}
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - cluster.name=defensym-cluster
     ports:
       - "9200:9200"
-      - "9300:9300"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     networks:
       - defensym-network
-
+    healthcheck:
+      test: curl -s http://localhost:9200/_cluster/health || exit 1
+      interval: 30s
+      timeout: 30s
+      retries: 3
 volumes:
   postgres-data:
     driver: local
